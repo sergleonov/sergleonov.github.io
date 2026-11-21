@@ -1,0 +1,58 @@
+# Site settings
+title: Sergei Leonov
+description: Mathematics and Computer Science student at Amherst College working on quantum computing, photonics, and applied mathematics.
+url: "https://sergleonov.github.io"  # your GitHub Pages URL
+baseurl: ""                           # "" for username.github.io, "/repo-name" for a project site
+
+author:
+  name: Sergei Leonov
+  short_name: S. Leonov               # how your name appears in author lists; gets bolded
+  position: B.A. candidate, Mathematics and Computer Science
+  affiliation: Amherst College
+  email: sleonov27@amherst.edu
+  photo: /assets/img/profile.svg      # replace with your photo, e.g. /assets/img/profile.jpg; "" to hide
+  github: sergleonov
+  linkedin: sergleonov
+  scholar: "wmokazcAAAAJ"
+  orcid: ""                           # add your ORCID iD to show the link
+
+nav:
+  - title: About
+    url: /
+  - title: Publications
+    url: /publications/
+  - title: Projects
+    url: /projects/
+  - title: CV
+    url: /cv/
+
+# ---------------------------------------------------------------
+# Theme
+# The built-in "academic" theme is used by default. To switch, uncomment
+# ONE theme line below and change `layout: academic` (under defaults) to
+# the layout name in the table in README.md. To go back, undo both.
+# ---------------------------------------------------------------
+# theme: jekyll-theme-minimal
+# theme: jekyll-theme-cayman
+# theme: minima
+# remote_theme: pages-themes/hacker
+# remote_theme: mmistakes/minimal-mistakes
+
+plugins:
+  - jekyll-remote-theme
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: academic      # academic | default | page | single (see README)
+
+# Used by minima for its header links
+header_pages:
+  - publications.md
+  - projects.md
+  - cv.md
+
+markdown: kramdown
+permalink: pretty
+exclude: [README.md, Gemfile, Gemfile.lock, vendor]

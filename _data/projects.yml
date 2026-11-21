@@ -1,0 +1,28 @@
+# Add each repo URL under `github:` to show a GitHub button.
+- title: Simulated qubit characterization
+  text: Estimated a simulated qubit's natural frequency, relaxation time, and Rabi rate in MATLAB by fitting Lorentzian, Rabi, and decay models, with uncertainties from the fit covariance.
+  github: ""
+
+- title: First open-source implementation of the Stålmarck SAT procedure
+  team: Team of 2
+  text: Formula parser converting CNF to Stålmarck implication triplets, generated CNF benchmarks, and unit and integration tests in a CI pipeline.
+  github: ""
+
+- title: Multitasking OS kernel with paged virtual memory
+  team: Team of 9
+  text: Kernel with a multi-level page table supporting context switching, system calls, and page allocation; up to 2× faster context switching after memory-management refinements.
+  github: ""
+
+- title: Real-time server-based text editor
+  team: Team of 2
+  text: TCP server with Scapy-built client packets for concurrent multi-user editing, a thread-safe operation queue, and a tkinter GUI.
+  github: ""
+
+- title: "Goldilocks: a game with a procedurally generated world"
+  team: Team of 4
+  text: Planet textures and positions generated with simplex noise; proximity-based rendering made it up to 3× faster.
+  github: ""
+
+- title: Encryption program
+  text: RSA, substitution, and Caesar ciphers with an interactive Java Swing GUI.
+  github: ""

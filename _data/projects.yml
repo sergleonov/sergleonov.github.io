@@ -4,36 +4,52 @@
 #   thumbnail: image shown above the project; click opens the video.
 #              Leave empty to use YouTube's own thumbnail for the video.
 #   embed:     true to play the video right on the page instead of linking out
+- title: Package for simulating dynamics of two-level-system defects (in development)
+  text: QuTiP-backed package implementing off-the-self numerical solvers for simulating open quantum dynamics of defects in superconductors, assess phase synchronization and emergence of limit cycles.
+  github: "https://github.com/sergleonov/tls_synchronization"
+
 - title: Simulated qubit characterization
   text: Estimated a simulated qubit's natural frequency, relaxation time, and Rabi rate in MATLAB by fitting Lorentzian, Rabi, and decay models, with uncertainties from the fit covariance.
-  github: ""
-  video: ""        # paste the YouTube link here
+  github: "https://github.com/sergleonov/qubit_characterization"
   thumbnail: /assets/img/projects/qubit-characterization.jpg
   embed: false
+
+- title: "Hey Daisy": Voice control interface for Spot
+  text: Designed a real-time voice control interface for Boston Dynamics Spot; implemented object localization commands like "go to [object]" using YOLOv7 for classification and built-in depth cameras.
+  github: "https://github.com/sergleonov/hey_daisy"
+  video: "https://youtu.be/MjK6ARMrfec"
+  # thumbnail: /assets/img/projects/qubit-characterization.jpg
+  embed: true
 
 - title: First open-source implementation of the Stålmarck SAT procedure
   team: Team of 2
   text: Formula parser converting CNF to Stålmarck implication triplets, generated CNF benchmarks, and unit and integration tests in a CI pipeline.
-  github: ""
+  github: "https://github.com/liamjdavis/StalmarckSAT"
 
 - title: Multitasking OS kernel with paged virtual memory
   team: Team of 9
   text: Kernel with a multi-level page table supporting context switching, system calls, and page allocation; up to 2× faster context switching after memory-management refinements.
-  github: ""
+  github: "https://github.com/sergleonov/pvmkernel"
 
 - title: Real-time server-based text editor
   team: Team of 2
   text: TCP server with Scapy-built client packets for concurrent multi-user editing, a thread-safe operation queue, and a tkinter GUI.
-  github: ""
+  github: "https://github.com/sergleonov/live-file-editor-tcp"
+  video: "https://youtu.be/gIb_VrVnjhE"
+  thumbnail: /assets/img/projects/live-text-editor.jpg
+  embed: true
 
 - title: "Goldilocks: a game with a procedurally generated world"
   team: Team of 4
   text: Planet textures and positions generated with simplex noise; proximity-based rendering made it up to 3× faster.
-  github: ""
+  github: "https://github.com/sergleonov/goldilocksgame"
+  video: "https://www.youtube.com/watch?v=rhNE35C7s5U"      
+  thumbnail: /assets/img/projects/goldilocks.jpg
+  embed: true
 
 - title: Cryptography program
   text: RSA, substitution, and Caesar ciphers with an interactive Java Swing GUI.
-  github: ""
-  video: ""        # paste the YouTube link here
-  thumbnail: /assets/img/projects/cryptography-program.jpg
-  embed: false
+  github: "https://github.com/sergleonov/encryption"
+  video: "https://www.youtube.com/watch?v=4Vlz6MiSEws"      
+  thumbnail: /assets/img/projects/cryptography.jpg
+  embed: true

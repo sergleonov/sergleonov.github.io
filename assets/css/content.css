@@ -11,7 +11,7 @@
 }
 .news time { color: var(--muted, inherit); opacity: var(--muted-opacity, 0.75); font-size: 0.85em; padding-top: 0.15em; }
 
-.year { font-size: 1rem; font-weight: 400; color: var(--muted, inherit); margin: 2rem 0 0.75rem; }
+h3.year { font-size: 1rem; font-weight: 400; color: var(--muted, inherit); margin: 2rem 0 0.75rem; }
 .pubs { list-style: none; padding: 0; margin: 0 0 1.5rem; }
 .pub { margin-bottom: 1.4rem; }
 .pub-title { font-weight: 600; display: block; }

@@ -1,0 +1,9 @@
+{%- case include.name -%}
+{%- when "email" -%}{%- capture d -%}<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5 12 13l8.5-6.5"/>{%- endcapture -%}
+{%- when "scholar" -%}{%- capture d -%}<path d="M2 9.5 12 4.5l10 5-10 5z"/><path d="M6 11.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.5"/><path d="M22 9.5V15"/>{%- endcapture -%}
+{%- when "github" -%}{%- capture d -%}<path d="M8.5 7 3.5 12l5 5"/><path d="M15.5 7l5 5-5 5"/><path d="M13.5 5l-3 14"/>{%- endcapture -%}
+{%- when "linkedin" -%}{%- capture d -%}<rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="9" cy="10.5" r="2"/><path d="M5.5 16.5c.6-1.7 1.9-2.6 3.5-2.6s2.9.9 3.5 2.6"/><path d="M15 10h3.5M15 13.5h2.5"/>{%- endcapture -%}
+{%- when "cv" -%}{%- capture d -%}<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 16.5h6"/>{%- endcapture -%}
+{%- when "orcid" -%}{%- capture d -%}<circle cx="12" cy="12" r="9"/><path d="M9 8.5v7M12 8.5h1.5a3.5 3.5 0 0 1 0 7H12z"/>{%- endcapture -%}
+{%- endcase -%}
+<svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">{{ d }}</svg>

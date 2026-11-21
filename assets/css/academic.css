@@ -84,7 +84,17 @@ img { max-width: 100%; height: auto; }
 .role { color: var(--muted); margin: 0 0 1.25rem; line-height: 1.5; }
 
 .links { list-style: none; padding: 0; margin: 0 0 1.5rem; }
-.links li { margin: 0.2rem 0; }
+.links li { margin: 0.3rem 0; }
+.links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+.links a span { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.18em; text-decoration-color: transparent; }
+.links a:hover span { text-decoration-color: currentColor; }
+.icon { flex: none; width: 1.05em; height: 1.05em; color: var(--muted); }
+.links a:hover .icon { color: var(--accent); }
 
 .nav {
   display: flex;
@@ -109,6 +119,51 @@ img { max-width: 100%; height: auto; }
 }
 .content h3 { font-size: 1.1rem; font-weight: 600; margin: 2rem 0 0.5rem; }
 
+/* CV page: clearer sections and entries */
+.content hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 2.75rem 0 0;
+}
+.page-cv h3 {
+  font-size: 1.4rem;
+  color: var(--accent);
+  letter-spacing: -0.005em;
+  margin: 1.25rem 0 0.75rem;
+}
+.page-cv h4 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 1.5rem 0 0;
+}
+.page-cv h3 + h4 { margin-top: 0.5rem; }
+.page-cv .meta {
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0.15rem 0 0.4rem;
+}
+.page-cv h4 + .meta + p { margin-top: 0.35rem; }
+.page-cv .meta + p, .page-cv .cv-list { margin-top: 0.35rem; }
+.cv-list { list-style: none; padding: 0; margin: 0; }
+.cv-list li { display: grid; grid-template-columns: 1fr auto; gap: 1rem; padding: 0.3rem 0; }
+.cv-list .when { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); padding-top: 0.2rem; white-space: nowrap; }
+.cv-skills li { grid-template-columns: 10rem 1fr; }
+.download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  text-decoration: none;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+.download .icon { color: var(--accent); }
+.download:hover { border-color: var(--accent); background: var(--accent-soft); }
+
 .footer {
   margin-top: 4rem;
   padding-top: 1rem;
@@ -126,6 +181,7 @@ img { max-width: 100%; height: auto; }
   .links { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; }
   .links li { margin: 0; }
   .nav { flex-direction: row; gap: 1.25rem; }
+  .cv-list li { grid-template-columns: 1fr; gap: 0; }
 }
 
 @media print {

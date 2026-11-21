@@ -21,12 +21,12 @@
       <p class="role">{{ site.author.position }}<br>{{ site.author.affiliation }}</p>
 
       <ul class="links">
-        {% if site.author.email != "" %}<li><a href="mailto:{{ site.author.email }}">Email</a></li>{% endif %}
-        {% if site.author.scholar != "" %}<li><a href="https://scholar.google.com/citations?user={{ site.author.scholar }}">Google Scholar</a></li>{% endif %}
-        {% if site.author.github != "" %}<li><a href="https://github.com/{{ site.author.github }}">GitHub</a></li>{% endif %}
-        <li><a href="{{ '/assets/files/cv.pdf' | relative_url }}">CV (PDF)</a></li>
-        {% if site.author.orcid != "" %}<li><a href="https://orcid.org/{{ site.author.orcid }}">ORCID</a></li>{% endif %}
-        {% if site.author.linkedin != "" %}<li><a href="https://www.linkedin.com/in/{{ site.author.linkedin }}/">LinkedIn</a></li>{% endif %}
+        {% if site.author.email != "" %}<li><a href="mailto:{{ site.author.email }}">{% include icon.html name="email" %}<span>Email</span></a></li>{% endif %}
+        {% if site.author.scholar != "" %}<li><a href="https://scholar.google.com/citations?user={{ site.author.scholar }}">{% include icon.html name="scholar" %}<span>Google Scholar</span></a></li>{% endif %}
+        {% if site.author.github != "" %}<li><a href="https://github.com/{{ site.author.github }}">{% include icon.html name="github" %}<span>GitHub</span></a></li>{% endif %}
+        {% if site.author.linkedin != "" %}<li><a href="https://www.linkedin.com/in/{{ site.author.linkedin }}/">{% include icon.html name="linkedin" %}<span>LinkedIn</span></a></li>{% endif %}
+        {% if site.author.orcid != "" %}<li><a href="https://orcid.org/{{ site.author.orcid }}">{% include icon.html name="orcid" %}<span>ORCID</span></a></li>{% endif %}
+        <li><a href="{{ '/assets/files/cv.pdf' | relative_url }}">{% include icon.html name="cv" %}<span>CV (PDF)</span></a></li>
       </ul>
 
       <nav class="nav" aria-label="Main">
@@ -36,7 +36,7 @@
       </nav>
     </aside>
 
-    <main class="content">
+    <main class="content page-{{ page.name | remove: '.md' | remove: '.html' }}">
       {% if page.url != "/" %}<h2 class="page-title">{{ page.title }}</h2>{% endif %}
       {{ content }}
       <footer class="footer">

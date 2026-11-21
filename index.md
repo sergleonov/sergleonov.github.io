@@ -11,8 +11,7 @@ Earlier projects took me through SAT solving, kinetic traffic models with optima
 ## News
 
 <ul class="news">
-{% for item in site.data.news limit:6 %}
-  <li><time>{{ item.date | date: "%b %Y" }}</time><span>{{ item.text | markdownify | remove: '<p>' | remove: '</p>' }}</span></li>
+{% for item in site.data.news limit:6 %}<li><time>{{ item.date | date: "%b %Y" }}</time><span>{{ item.text | markdownify | remove: '<p>' | remove: '</p>' }}</span></li>
 {% endfor %}
 </ul>
 

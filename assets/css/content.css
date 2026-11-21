@@ -31,3 +31,45 @@ h3.year { font-size: 1rem; font-weight: 400; color: var(--muted, inherit); margi
 @media (max-width: 46rem) {
   .news li { grid-template-columns: 1fr; gap: 0; }
 }
+
+/* Projects, with optional video thumbnails */
+.projects { list-style: none; padding: 0; margin: 0; }
+.project { margin-bottom: 2rem; }
+.project-media {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  margin-bottom: 0.75rem;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--rule, rgba(127, 127, 127, 0.3));
+  background: var(--rule, rgba(127, 127, 127, 0.15));
+}
+.project-media img,
+.project-media iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 0;
+}
+.project-media .play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin: -1.75rem 0 0 -1.75rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--accent, #1f4e8c);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease;
+}
+.project-media .play svg { margin-left: 3px; }
+a.project-media:hover .play,
+a.project-media:focus-visible .play { transform: scale(1.08); }
+a.project-media:focus-visible { outline: 2px solid var(--accent, currentColor); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .project-media .play { transition: none; } }

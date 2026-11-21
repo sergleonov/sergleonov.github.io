@@ -1,7 +1,15 @@
-# Add each repo URL under `github:` to show a GitHub button.
+# Fields
+#   github:    repo URL, shows a GitHub button
+#   video:     YouTube link (youtube.com/watch?v=..., youtu.be/..., or /shorts/...)
+#   thumbnail: image shown above the project; click opens the video.
+#              Leave empty to use YouTube's own thumbnail for the video.
+#   embed:     true to play the video right on the page instead of linking out
 - title: Simulated qubit characterization
   text: Estimated a simulated qubit's natural frequency, relaxation time, and Rabi rate in MATLAB by fitting Lorentzian, Rabi, and decay models, with uncertainties from the fit covariance.
   github: ""
+  video: ""        # paste the YouTube link here
+  thumbnail: /assets/img/projects/qubit-characterization.jpg
+  embed: false
 
 - title: First open-source implementation of the Stålmarck SAT procedure
   team: Team of 2
@@ -23,6 +31,9 @@
   text: Planet textures and positions generated with simplex noise; proximity-based rendering made it up to 3× faster.
   github: ""
 
-- title: Encryption program
+- title: Cryptography program
   text: RSA, substitution, and Caesar ciphers with an interactive Java Swing GUI.
   github: ""
+  video: ""        # paste the YouTube link here
+  thumbnail: /assets/img/projects/cryptography-program.jpg
+  embed: false

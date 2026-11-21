@@ -1,0 +1,26 @@
+{%- assign p = include.project -%}
+{%- assign vid = "" -%}
+{%- if p.video and p.video != "" -%}
+  {%- if p.video contains "youtu.be/" -%}{%- assign vid = p.video | split: "youtu.be/" | last | split: "?" | first -%}
+  {%- elsif p.video contains "/shorts/" -%}{%- assign vid = p.video | split: "/shorts/" | last | split: "?" | first -%}
+  {%- elsif p.video contains "v=" -%}{%- assign vid = p.video | split: "v=" | last | split: "&" | first -%}
+  {%- endif -%}
+{%- endif -%}
+{%- assign thumb = "" -%}
+{%- if p.thumbnail and p.thumbnail != "" -%}{%- assign thumb = p.thumbnail | relative_url -%}
+{%- elsif vid != "" -%}{%- assign thumb = "https://img.youtube.com/vi/" | append: vid | append: "/hqdefault.jpg" -%}{%- endif -%}
+<li class="project">
+{%- if p.embed and vid != "" -%}
+<div class="project-media"><iframe src="https://www.youtube-nocookie.com/embed/{{ vid }}" title="{{ p.title }} demo video" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+{%- elsif thumb != "" -%}
+{%- if p.video and p.video != "" -%}
+<a class="project-media" href="{{ p.video }}" aria-label="Watch the {{ p.title }} demo on YouTube"><img src="{{ thumb }}" alt="" loading="lazy"><span class="play" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></span></a>
+{%- else -%}
+<div class="project-media"><img src="{{ thumb }}" alt="{{ p.title }}" loading="lazy"></div>
+{%- endif -%}
+{%- endif -%}
+<span class="pub-title">{{ p.title }}</span>{% if p.team %}<span class="pub-venue">{{ p.team }}</span>{% endif %}<span class="pub-authors">{{ p.text }}</span>
+{%- assign has_video = false -%}{%- if p.video and p.video != "" -%}{%- assign has_video = true -%}{%- endif -%}
+{%- assign has_repo = false -%}{%- if p.github and p.github != "" -%}{%- assign has_repo = true -%}{%- endif -%}
+{%- if has_video or has_repo -%}<span class="pub-links">{% if p.video and p.video != "" %}<a href="{{ p.video }}">Watch demo</a>{% endif %}{% if p.github and p.github != "" %}<a href="{{ p.github }}">GitHub</a>{% endif %}</span>{%- endif -%}
+</li>

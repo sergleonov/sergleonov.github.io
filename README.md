@@ -17,7 +17,8 @@ A small Jekyll site that GitHub Pages builds automatically. It ships with its ow
 | Bio | `index.md` |
 | News | `_data/news.yml` |
 | Papers | `_data/publications.yml` |
-| Projects (add repo links here) | `_data/projects.yml` |
+| Projects, repo links and demo videos | `_data/projects.yml` |
+| Project thumbnails | `assets/img/projects/` |
 | Research, teaching, awards | `cv.md` |
 | Photo | `assets/img/` (then update `photo:` in `_config.yml`) |
 | CV PDF | `assets/files/cv.pdf` |

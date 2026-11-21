@@ -5,7 +5,7 @@
 #              Leave empty to use YouTube's own thumbnail for the video.
 #   embed:     true to play the video right on the page instead of linking out
 - title: Package for simulating dynamics of two-level-system defects (in development)
-  text: QuTiP-backed package implementing off-the-self numerical solvers for simulating open quantum dynamics of defects in superconductors, assess phase synchronization and emergence of limit cycles.
+  text: QuTiP- and OQuPy-backed package implementing off-the-shelf numerical solvers for simulating dynamics of TLS defects in bosonic environments and assessing phase synchronization and emergence of limit cycles.
   github: "https://github.com/sergleonov/tls_synchronization"
 
 - title: Simulated qubit characterization
@@ -14,7 +14,7 @@
   thumbnail: /assets/img/projects/qubit-characterization.jpg
   embed: false
 
-- title: "Hey Daisy": Voice control interface for Spot
+- title: '"Hey Daisy": Voice control interface for Spot'
   text: Designed a real-time voice control interface for Boston Dynamics Spot; implemented object localization commands like "go to [object]" using YOLOv7 for classification and built-in depth cameras.
   github: "https://github.com/sergleonov/hey_daisy"
   video: "https://youtu.be/MjK6ARMrfec"

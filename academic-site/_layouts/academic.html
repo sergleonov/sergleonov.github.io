@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if page.title and page.url != "/" %}{{ page.title }} | {% endif %}{{ site.title }}</title>
+  <meta name="description" content="{{ page.description | default: site.description }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ '/assets/css/academic.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/assets/css/content.css' | relative_url }}">
+</head>
+<body>
+  <div class="page">
+    <aside class="profile">
+      {% if site.author.photo != "" %}
+      <img class="photo" src="{{ site.author.photo | relative_url }}" alt="Portrait of {{ site.author.name }}">
+      {% endif %}
+      <h1 class="name"><a href="{{ '/' | relative_url }}">{{ site.author.name }}</a></h1>
+      <p class="role">{{ site.author.position }}<br>{{ site.author.affiliation }}</p>
+
+      <ul class="links">
+        {% if site.author.email != "" %}<li><a href="mailto:{{ site.author.email }}">Email</a></li>{% endif %}
+        {% if site.author.scholar != "" %}<li><a href="https://scholar.google.com/citations?user={{ site.author.scholar }}">Google Scholar</a></li>{% endif %}
+        {% if site.author.github != "" %}<li><a href="https://github.com/{{ site.author.github }}">GitHub</a></li>{% endif %}
+        <li><a href="{{ '/assets/files/cv.pdf' | relative_url }}">CV (PDF)</a></li>
+        {% if site.author.orcid != "" %}<li><a href="https://orcid.org/{{ site.author.orcid }}">ORCID</a></li>{% endif %}
+        {% if site.author.linkedin != "" %}<li><a href="https://www.linkedin.com/in/{{ site.author.linkedin }}/">LinkedIn</a></li>{% endif %}
+      </ul>
+
+      <nav class="nav" aria-label="Main">
+        {% for item in site.nav %}
+        <a href="{{ item.url | relative_url }}"{% if page.url == item.url %} aria-current="page"{% endif %}>{{ item.title }}</a>
+        {% endfor %}
+      </nav>
+    </aside>
+
+    <main class="content">
+      {% if page.url != "/" %}<h2 class="page-title">{{ page.title }}</h2>{% endif %}
+      {{ content }}
+      <footer class="footer">
+        Last updated {{ site.time | date: "%B %Y" }}
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

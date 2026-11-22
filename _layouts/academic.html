@@ -8,6 +8,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <script>
+    /* Hide reveal targets before first paint; show everything if the reveal script never runs */
+    document.documentElement.classList.add('js');
+    setTimeout(function () { if (!window.__revealReady) document.documentElement.classList.add('reveal-all'); }, 2500);
+  </script>
   <link rel="stylesheet" href="{{ '/assets/css/academic.css' | relative_url }}?v={{ site.time | date: '%s' }}">
   <link rel="stylesheet" href="{{ '/assets/css/content.css' | relative_url }}?v={{ site.time | date: '%s' }}">
 </head>
@@ -18,11 +23,12 @@
       {% if site.author.photo != "" %}
       <img class="photo" src="{{ site.author.photo | relative_url }}" alt="Portrait of {{ site.author.name }}">
       {% endif %}
-      <h1 class="name"><a href="{{ '/' | relative_url }}">{{ site.author.name }}</a></h1>
+      {%- assign name_alt = site.author.name_alt | default: "" | strip -%}
+      <h1 class="name"><a href="{{ '/' | relative_url }}"{% if name_alt != "" %} aria-label="{{ site.author.name }}"{% endif %}>{% if name_alt != "" %}<span class="name-text" aria-hidden="true" data-alt="{{ name_alt }}">{{ site.author.name }}</span>{% else %}{{ site.author.name }}{% endif %}</a></h1>
       <p class="role">{{ site.author.position }}<br>{{ site.author.affiliation }}</p>
 
       <ul class="links">
-        {% if site.author.email != "" %}<li><a href="mailto:{{ site.author.email }}" title="Email">{% include icon.html name="email" %}<span class="sr-only">Email</span></a></li>{% endif %}
+        {% if site.author.email != "" %}<li><a href="mailto:{{ site.author.email }}" data-copy-email="{{ site.author.email }}" title="Copy email">{% include icon.html name="email" %}<span class="sr-only">Email (click to copy the address)</span></a></li>{% endif %}
         {% if site.author.scholar != "" %}<li><a href="https://scholar.google.com/citations?user={{ site.author.scholar }}" title="Google Scholar">{% include icon.html name="scholar" %}<span class="sr-only">Google Scholar</span></a></li>{% endif %}
         {% if site.author.github != "" %}<li><a href="https://github.com/{{ site.author.github }}" title="GitHub">{% include icon.html name="github" %}<span class="sr-only">GitHub</span></a></li>{% endif %}
         {% if site.author.linkedin != "" %}<li><a href="https://www.linkedin.com/in/{{ site.author.linkedin }}/" title="LinkedIn">{% include icon.html name="linkedin" %}<span class="sr-only">LinkedIn</span></a></li>{% endif %}
@@ -45,6 +51,7 @@
       </footer>
     </main>
   </div>
+  {% include interactions.html %}
   {% if bg_motion == "bloch" %}{% include bloch-bg.html %}{% elsif bg_motion == "wave" %}{% include wave-bg.html %}{% endif %}
 </body>
 </html>

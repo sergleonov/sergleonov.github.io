@@ -1,0 +1,150 @@
+<script>
+(function () {
+  window.__revealReady = true;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- Name morph: Latin <-> alternate spelling, letter by letter ---- */
+  var nameEl = document.querySelector('.name-text[data-alt]');
+  if (nameEl && nameEl.getAttribute('data-alt')) {
+    var latin = nameEl.textContent, alt = nameEl.getAttribute('data-alt'), timers = [];
+    var link = nameEl.closest('a') || nameEl;
+    var morph = function (to) {
+      timers.forEach(clearTimeout); timers = [];
+      if (reduce) { nameEl.textContent = to; return; }
+      var cur = nameEl.textContent.split(''), target = to.split('');
+      var n = Math.max(cur.length, target.length);
+      for (var i = 0; i < n; i++) {
+        (function (i) {
+          timers.push(setTimeout(function () {
+            cur[i] = target[i] || '';
+            nameEl.textContent = cur.join('');
+            if (i === n - 1) nameEl.textContent = to;
+          }, i * 40));
+        })(i);
+      }
+    };
+    link.addEventListener('mouseenter', function () { morph(alt); });
+    link.addEventListener('mouseleave', function () { morph(latin); });
+    link.addEventListener('focus', function () { morph(alt); });
+    link.addEventListener('blur', function () { morph(latin); });
+  }
+
+  /* ---- Sliding nav marker ---- */
+  var nav = document.querySelector('.nav');
+  if (nav) {
+    var links = nav.querySelectorAll('a'), current = nav.querySelector('[aria-current]');
+    var marker = document.createElement('span');
+    marker.className = 'nav-marker no-anim';
+    marker.setAttribute('aria-hidden', 'true');
+    nav.appendChild(marker);
+    nav.classList.add('has-marker');
+    var place = function (el) {
+      if (!el) { marker.style.opacity = '0'; return; }
+      marker.style.opacity = '1';
+      if (getComputedStyle(nav).flexDirection === 'row') {        // phone layout: underline
+        marker.style.left = el.offsetLeft + 'px';
+        marker.style.width = el.offsetWidth + 'px';
+        marker.style.top = (el.offsetTop + el.offsetHeight - 2) + 'px';
+        marker.style.height = '2px';
+      } else {                                                       // sidebar: bar on the left
+        marker.style.left = '0px';
+        marker.style.width = '2px';
+        marker.style.top = el.offsetTop + 'px';
+        marker.style.height = el.offsetHeight + 'px';
+      }
+    };
+    var settle = function () {
+      marker.classList.add('no-anim'); place(current);
+      requestAnimationFrame(function () { marker.classList.remove('no-anim'); });
+    };
+    settle();
+    Array.prototype.forEach.call(links, function (a) {
+      a.addEventListener('mouseenter', function () { place(a); });
+      a.addEventListener('focus', function () { place(a); });
+    });
+    nav.addEventListener('mouseleave', function () { place(current); });
+    nav.addEventListener('focusout', function (e) { if (!nav.contains(e.relatedTarget)) place(current); });
+    window.addEventListener('resize', settle);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(settle);
+  }
+
+  /* ---- Copy email on click, with a small toast ---- */
+  var mail = document.querySelector('[data-copy-email]');
+  if (mail) {
+    var toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    document.body.appendChild(toast);
+    var hideTimer;
+    var say = function (msg) {
+      toast.textContent = msg;
+      toast.classList.add('on');
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(function () { toast.classList.remove('on'); }, 1800);
+    };
+    var fallbackCopy = function (text) {
+      var t = document.createElement('textarea');
+      t.value = text; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0';
+      document.body.appendChild(t); t.select();
+      var ok = false; try { ok = document.execCommand('copy'); } catch (err) {}
+      document.body.removeChild(t);
+      return ok;
+    };
+    mail.addEventListener('click', function (e) {
+      // Cmd/Ctrl/Shift-click and middle-click still open the mail app
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+      var addr = mail.getAttribute('data-copy-email');
+      e.preventDefault();
+      var done = function () { say('Email copied: ' + addr); };
+      var fail = function () { if (fallbackCopy(addr)) done(); else window.location.href = mail.href; };
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(addr).then(done, fail);
+      else fail();
+    });
+  }
+
+  /* ---- Cursor spotlight: a very faint warm glow under the cursor (mouse only) ---- */
+  if (!reduce && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    var glow = document.createElement('div');
+    glow.className = 'spotlight';
+    glow.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(glow);
+    var gx = 0, gy = 0, queued = false;
+    var paint = function () {
+      queued = false;
+      glow.style.setProperty('--sx', gx + 'px');
+      glow.style.setProperty('--sy', gy + 'px');
+    };
+    window.addEventListener('pointermove', function (e) {
+      if (e.pointerType !== 'mouse') return;
+      gx = e.clientX; gy = e.clientY;
+      glow.classList.add('on');
+      if (!queued) { queued = true; requestAnimationFrame(paint); }
+    }, { passive: true });
+    document.documentElement.addEventListener('mouseleave', function () { glow.classList.remove('on'); });
+    window.addEventListener('blur', function () { glow.classList.remove('on'); });
+  }
+
+  /* ---- Page-load reveal and reveal on scroll ---- */
+  var targets = document.querySelectorAll('.content > :not(ul), .content > ul > li');
+  var show = function (el) { el.classList.add('in'); };
+  if (reduce || !('IntersectionObserver' in window)) {
+    Array.prototype.forEach.call(targets, show);
+    return;
+  }
+  var first = true;
+  var io = new IntersectionObserver(function (entries) {
+    var k = 0;
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      var el = e.target;
+      if (first) el.style.transitionDelay = Math.min(k++ * 70, 700) + 'ms';   // stagger on page load
+      show(el);
+      io.unobserve(el);
+      el.addEventListener('transitionend', function () { el.style.transitionDelay = ''; }, { once: true });
+    });
+    first = false;
+  }, { rootMargin: '0px 0px -6% 0px', threshold: 0.08 });
+  Array.prototype.forEach.call(targets, function (el) { io.observe(el); });
+})();
+</script>

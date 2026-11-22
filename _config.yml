@@ -6,6 +6,7 @@ baseurl: ""                           # "" for username.github.io, "/repo-name" 
 
 author:
   name: Sergei Leonov
+  name_alt: Сергей Леонов            # shown when hovering your name; "" to turn off
   short_name: S. Leonov               # how your name appears in author lists; gets bolded
   position: B.A. candidate, Mathematics and Computer Science
   affiliation: Amherst College

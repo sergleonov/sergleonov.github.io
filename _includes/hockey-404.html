@@ -1,0 +1,224 @@
+<style>
+.hockey { margin-top: 1.5rem; }
+.hockey canvas { display: block; width: 100%; height: auto; aspect-ratio: 2 / 1; border-radius: 8px; touch-action: none; cursor: grab; }
+.hockey canvas.aim { cursor: grabbing; }
+/* Message gets its own fixed-height line, so the controls below never move */
+.hockey-msg { height: 1.6em; line-height: 1.6em; margin: 0.75rem 0 0.5rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--ink); font-family: var(--serif); font-size: 1rem; }
+.hockey-msg.goal { color: var(--accent); font-weight: 600; }
+.hockey-bar { display: flex; align-items: center; gap: 0.6rem; font-family: var(--sans); font-size: 0.8rem; color: var(--muted); }
+.hockey-score { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hockey-btn { flex: none; font-family: var(--sans); font-size: 0.8rem; line-height: 1.2; color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: 999px; padding: 0.4rem 0.9rem; cursor: pointer; text-decoration: none; white-space: nowrap; }
+.hockey-btn:hover { border-color: var(--accent); }
+/* Back home: space is always reserved; after a goal it appears as the main, filled button */
+.hockey-home { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; visibility: hidden; opacity: 0; transform: translateY(4px) scale(0.96); transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s linear 0.3s; }
+.hockey-home:hover { background: #eaa974; border-color: #eaa974; color: var(--paper); }
+.hockey-home.show { visibility: visible; opacity: 1; transform: none; transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s; animation: hockey-pulse 1.4s ease-out 0.3s 2; }
+@keyframes hockey-pulse { 0% { box-shadow: 0 0 0 0 rgba(227, 154, 95, 0.55); } 100% { box-shadow: 0 0 0 12px rgba(227, 154, 95, 0); } }
+@media (prefers-reduced-motion: reduce) { .hockey-home, .hockey-home.show { transition: none; animation: none; transform: none; } }
+</style>
+<div class="hockey">
+<canvas id="hockey-rink" width="760" height="380" role="img" aria-label="Hockey shootout. Drag back from the puck and release to shoot at the net on the right."></canvas>
+<div class="hockey-msg" id="hockey-msg" aria-live="polite">Drag back from the puck, then let go.</div>
+<div class="hockey-bar">
+<span class="hockey-score" id="hockey-score">Shots 0 · Goals 0</span>
+<button class="hockey-btn" id="hockey-reset" type="button">Reset puck</button>
+<a class="hockey-btn hockey-home" id="hockey-home" href="{{ '/' | relative_url }}">Back home →</a>
+</div>
+</div>
+<script>
+(function () {
+  var cv = document.getElementById('hockey-rink');
+  if (!cv || !cv.getContext) return;
+  var c = cv.getContext('2d'), W = 760, H = 380;
+  var dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = W * dpr; cv.height = H * dpr; c.scale(dpr, dpr);
+
+  // Colors come from the site theme, so the rink follows any palette change
+  var css = getComputedStyle(document.documentElement);
+  function v(name, fb) { return (css.getPropertyValue(name) || fb).trim() || fb; }
+  var ACC = v('--accent', '#e39a5f'), INK = v('--ink', '#e8e6e3'), MUTED = v('--muted', '#a19d98'), LINE = v('--accent-line', '#4a3828');
+  var SERIF = v('--serif', 'Georgia, serif');
+  function rgb(hex) { hex = hex.replace('#', ''); if (hex.length === 3) hex = hex.replace(/(.)/g, '$1$1'); var n = parseInt(hex, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+  var AR = rgb(ACC); function acc(a) { return 'rgba(' + AR[0] + ',' + AR[1] + ',' + AR[2] + ',' + a + ')'; }
+  var ICE = '#202021';
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---- Rink geometry (markings scaled from a real 85 ft wide rink) ----
+  var RK = { x0: 8, y0: 8, x1: W - 8, y1: H - 8, r: 92 }, PR = 11;
+  var IN = { x0: RK.x0 + PR, y0: RK.y0 + PR, x1: RK.x1 - PR, y1: RK.y1 - PR, r: RK.r - PR };
+  var CY = H / 2, GL_R = RK.x1 - 66, GL_L = RK.x0 + 66, MOUTH = 46, DEPTH = 30, POST = 4;
+  var FT = (RK.y1 - RK.y0) / 85, FO_R = 15 * FT, FO_DX = 20 * FT, FO_DY = 22 * FT;
+  function net(gx, d) { var b = gx + d * DEPTH; return [[gx, CY - MOUTH, b, CY - MOUTH], [b, CY - MOUTH, b, CY + MOUTH], [gx, CY + MOUTH, b, CY + MOUTH]]; }
+  var SEGS = net(GL_R, 1).concat(net(GL_L, -1));
+  var POSTS = [[GL_R, CY - MOUTH], [GL_R, CY + MOUTH], [GL_L, CY - MOUTH], [GL_L, CY + MOUTH]];
+  var GOALIE = { x: GL_R - 15, half: 26, r: 8, speed: 1.5 };
+
+  var TH0 = 0.85, th = TH0, thTarget = TH0;
+  var puck, shots = 0, goals = 0, drag = null, t = 0, flash = 0, scored = false, last = performance.now();
+  var shotEvent = false;   // has this shot already produced a message (save, post, net, wide, goal)?
+  var msg = document.getElementById('hockey-msg'), score = document.getElementById('hockey-score'), home = document.getElementById('hockey-home');
+  function say(s, isGoal) { msg.textContent = s; msg.classList.toggle('goal', !!isGoal); }
+  function upd() { score.textContent = 'Shots ' + shots + ' · Goals ' + goals; }
+  function reset() { puck = { x: W / 2, y: CY, vx: 0, vy: 0, moving: false }; scored = false; thTarget = TH0; }
+  reset();
+  function goalieY() { return reduce ? CY : CY + Math.sin(t * GOALIE.speed) * (MOUTH - 14); }
+
+  // ---- Collisions ----
+  function bounce(nx, ny, e) { var d = puck.vx * nx + puck.vy * ny; if (d < 0) { puck.vx -= (1 + e) * d * nx; puck.vy -= (1 + e) * d * ny; } }
+  function circle(cx, cy, R, e) {
+    var dx = puck.x - cx, dy = puck.y - cy, d = Math.hypot(dx, dy), m = R + PR;
+    if (d < m && d > 0) { var nx = dx / d, ny = dy / d; puck.x = cx + nx * m; puck.y = cy + ny * m; bounce(nx, ny, e); return true; }
+    return false;
+  }
+  function segment(x1, y1, x2, y2, R, e) {
+    var vx = x2 - x1, vy = y2 - y1, L = vx * vx + vy * vy;
+    var k = Math.max(0, Math.min(1, ((puck.x - x1) * vx + (puck.y - y1) * vy) / L));
+    return circle(x1 + k * vx, y1 + k * vy, R, e);
+  }
+  function boards() {
+    var e = 0.78, cx = null, cy = null;
+    if (puck.x < IN.x0 + IN.r && puck.y < IN.y0 + IN.r) { cx = IN.x0 + IN.r; cy = IN.y0 + IN.r; }
+    else if (puck.x > IN.x1 - IN.r && puck.y < IN.y0 + IN.r) { cx = IN.x1 - IN.r; cy = IN.y0 + IN.r; }
+    else if (puck.x < IN.x0 + IN.r && puck.y > IN.y1 - IN.r) { cx = IN.x0 + IN.r; cy = IN.y1 - IN.r; }
+    else if (puck.x > IN.x1 - IN.r && puck.y > IN.y1 - IN.r) { cx = IN.x1 - IN.r; cy = IN.y1 - IN.r; }
+    if (cx !== null) {
+      var dx = puck.x - cx, dy = puck.y - cy, d = Math.hypot(dx, dy);
+      if (d > IN.r) { var nx = -dx / d, ny = -dy / d; puck.x = cx - nx * IN.r; puck.y = cy - ny * IN.r; bounce(nx, ny, e); }
+      return;
+    }
+    if (puck.x < IN.x0) { puck.x = IN.x0; bounce(1, 0, e); }
+    if (puck.x > IN.x1) { puck.x = IN.x1; bounce(-1, 0, e); }
+    if (puck.y < IN.y0) { puck.y = IN.y0; bounce(0, 1, e); }
+    if (puck.y > IN.y1) { puck.y = IN.y1; bounce(0, -1, e); }
+  }
+
+  function step(dt) {
+    t += dt; flash = Math.max(0, flash - dt * 1.2);
+    th += (thTarget - th) * Math.min(1, dt * 7);
+    if (!puck.moving) return;
+    var N = 6, h = dt / N, fr = Math.pow(0.55, h);
+    for (var i = 0; i < N; i++) {
+      var prevX = puck.x;
+      puck.x += puck.vx * h; puck.y += puck.vy * h; puck.vx *= fr; puck.vy *= fr;
+      // Crossing the opponent's goal line outside the posts is a miss, judged right away
+      if (!shotEvent && !scored && prevX < GL_R && puck.x >= GL_R && Math.abs(puck.y - CY) >= MOUTH) {
+        var wide = Math.abs(puck.y - CY) - MOUTH;
+        say(wide < 40 ? 'Just wide!' : 'Wide of the net.');
+        shotEvent = true;
+      }
+      boards();
+      SEGS.forEach(function (sg, idx) {
+        // The first three segments are the opponent's net; your own net stays quiet
+        if (segment(sg[0], sg[1], sg[2], sg[3], 1, 0.5) && idx < 3 && !shotEvent && !scored) {
+          say(idx === 1 ? 'Off the back of the net.' : 'Off the side of the net.');
+          shotEvent = true;
+        }
+      });
+      POSTS.forEach(function (p, idx) {
+        // Only the opponent's posts (the first two) get a message; your own net stays quiet
+        if (circle(p[0], p[1], POST, 0.7) && idx < 2 && !scored) { say('Off the post!'); shotEvent = true; }
+      });
+      var gy = goalieY();
+      if (segment(GOALIE.x, gy - GOALIE.half, GOALIE.x, gy + GOALIE.half, GOALIE.r, 0.55) && !scored) { say('Saved! Try again.'); shotEvent = true; }
+      if (!scored && puck.x - PR > GL_R && puck.x < GL_R + DEPTH && Math.abs(puck.y - CY) < MOUTH) {
+        scored = true; shotEvent = true; goals++; flash = 1; thTarget = Math.PI; upd();
+        say('Goal! Measured |1⟩.', true);
+        home.classList.add('show');
+        puck.vx *= 0.3; puck.vy *= 0.3;
+        setTimeout(reset, 1600);
+      }
+    }
+    if (Math.hypot(puck.vx, puck.vy) < 18) {   // a nearly still puck counts as stopped, so the result shows sooner
+      puck.moving = false; puck.vx = puck.vy = 0;
+      // The shot ended without touching the goalie, a post or the net
+      if (!shotEvent && !scored) say('Missed the net. Try again.');
+    }
+  }
+
+  // ---- Drawing ----
+  function rr(x0, y0, x1, y1, r) { c.beginPath(); c.moveTo(x0 + r, y0); c.arcTo(x1, y0, x1, y1, r); c.arcTo(x1, y1, x0, y1, r); c.arcTo(x0, y1, x0, y0, r); c.arcTo(x0, y0, x1, y0, r); c.closePath(); }
+  function dot(x, y, r, col) { c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); }
+  function bloch(cx, cy, R) {
+    var ry = R * 0.3;
+    c.lineWidth = 2; c.strokeStyle = acc(0.45); c.beginPath(); c.arc(cx, cy, R, 0, Math.PI * 2); c.stroke();
+    c.lineWidth = 1.5; c.strokeStyle = acc(0.4); c.beginPath(); c.ellipse(cx, cy, R, ry, 0, 0, Math.PI); c.stroke();
+    c.setLineDash([4, 5]); c.strokeStyle = acc(0.25); c.beginPath(); c.ellipse(cx, cy, R, ry, 0, Math.PI, Math.PI * 2); c.stroke();
+    c.strokeStyle = acc(0.18); c.beginPath(); c.ellipse(cx, cy, R * 0.34, R, 0, 0, Math.PI * 2); c.stroke();
+    c.strokeStyle = acc(0.3); c.beginPath(); c.moveTo(cx, cy - R - 6); c.lineTo(cx, cy + R + 6); c.stroke(); c.setLineDash([]);
+    c.fillStyle = acc(0.45); c.font = '15px ' + SERIF; c.textAlign = 'left';
+    c.fillText('|0⟩', cx + 7, cy - R - 4); c.fillText('|1⟩', cx + 7, cy + R + 15);
+    var px = cx + R * 0.8 * Math.sin(th) * 0.96, py = cy - R * Math.cos(th) + R * 0.18 * Math.sin(th);
+    c.strokeStyle = acc(0.7); c.lineWidth = 2.2; c.beginPath(); c.moveTo(cx, cy); c.lineTo(px, py); c.stroke();
+    dot(px, py, 4.5, acc(0.85)); dot(cx, cy, 3.5, acc(0.55));
+  }
+  function draw() {
+    c.clearRect(0, 0, W, H);
+    rr(RK.x0, RK.y0, RK.x1, RK.y1, RK.r); c.fillStyle = ICE; c.fill();
+    c.save(); c.clip();
+    c.lineWidth = 2; c.strokeStyle = acc(0.45);
+    c.beginPath(); c.moveTo(W / 2, RK.y0); c.lineTo(W / 2, CY - FO_R - 22); c.moveTo(W / 2, CY + FO_R + 22); c.lineTo(W / 2, RK.y1); c.stroke();
+    c.strokeStyle = acc(0.22); c.lineWidth = 5;
+    [W / 2 - 120, W / 2 + 120].forEach(function (x) { c.beginPath(); c.moveTo(x, RK.y0); c.lineTo(x, RK.y1); c.stroke(); });
+    c.lineWidth = 2; c.strokeStyle = acc(0.3);
+    [GL_L, GL_R].forEach(function (x) { c.beginPath(); c.moveTo(x, RK.y0); c.lineTo(x, RK.y1); c.stroke(); });
+    bloch(W / 2, CY, FO_R);
+    [[GL_R - FO_DX, CY - FO_DY], [GL_R - FO_DX, CY + FO_DY], [GL_L + FO_DX, CY - FO_DY], [GL_L + FO_DX, CY + FO_DY]].forEach(function (p) {
+      c.strokeStyle = acc(0.22); c.lineWidth = 2; c.beginPath(); c.arc(p[0], p[1], FO_R, 0, Math.PI * 2); c.stroke(); dot(p[0], p[1], 4, acc(0.32));
+    });
+    c.fillStyle = acc(0.07);
+    [[GL_R, -1], [GL_L, 1]].forEach(function (g) { c.beginPath(); c.moveTo(g[0], CY - MOUTH); c.arc(g[0], CY, MOUTH, -Math.PI / 2, Math.PI / 2, g[1] < 0); c.closePath(); c.fill(); });
+    c.restore();
+    rr(RK.x0, RK.y0, RK.x1, RK.y1, RK.r); c.strokeStyle = LINE; c.lineWidth = 4; c.stroke();
+    [[GL_R, 1, true], [GL_L, -1, false]].forEach(function (g) {
+      var gx = g[0], d = g[1], live = g[2];
+      c.fillStyle = acc(live ? 0.08 + flash * 0.35 : 0.05); c.fillRect(Math.min(gx, gx + d * DEPTH), CY - MOUTH, DEPTH, MOUTH * 2);
+      c.strokeStyle = live ? ACC : acc(0.45); c.lineWidth = 3;
+      c.beginPath(); c.moveTo(gx, CY - MOUTH); c.lineTo(gx + d * DEPTH, CY - MOUTH); c.lineTo(gx + d * DEPTH, CY + MOUTH); c.lineTo(gx, CY + MOUTH); c.stroke();
+      dot(gx, CY - MOUTH, POST, live ? ACC : acc(0.45)); dot(gx, CY + MOUTH, POST, live ? ACC : acc(0.45));
+    });
+    var gy = goalieY();
+    c.fillStyle = MUTED; c.beginPath();
+    if (c.roundRect) c.roundRect(GOALIE.x - GOALIE.r, gy - GOALIE.half - GOALIE.r, GOALIE.r * 2, (GOALIE.half + GOALIE.r) * 2, GOALIE.r);
+    else c.rect(GOALIE.x - GOALIE.r, gy - GOALIE.half - GOALIE.r, GOALIE.r * 2, (GOALIE.half + GOALIE.r) * 2);
+    c.fill();
+    if (drag && !puck.moving) {
+      var dx = puck.x - drag.x, dy = puck.y - drag.y, m = Math.min(1, Math.hypot(dx, dy) / 200);
+      if (m > 0.03) {
+        var a = Math.atan2(dy, dx), L = 50 + m * 200;
+        c.setLineDash([6, 8]); c.strokeStyle = acc(0.65); c.lineWidth = 2;
+        c.beginPath(); c.moveTo(puck.x, puck.y); c.lineTo(puck.x + Math.cos(a) * L, puck.y + Math.sin(a) * L); c.stroke(); c.setLineDash([]);
+        c.strokeStyle = 'rgba(232,230,227,0.25)'; c.beginPath(); c.moveTo(puck.x, puck.y); c.lineTo(drag.x, drag.y); c.stroke();
+        c.fillStyle = acc(0.8); c.fillRect(puck.x - 22, puck.y + 20, 44 * m, 4);
+        c.strokeStyle = acc(0.4); c.lineWidth = 1; c.strokeRect(puck.x - 22, puck.y + 20, 44, 4);
+      }
+    }
+    dot(puck.x, puck.y, PR, INK);
+  }
+
+  function loop(n) { var dt = Math.min(0.033, (n - last) / 1000); last = n; step(dt); draw(); requestAnimationFrame(loop); }
+  requestAnimationFrame(loop);
+
+  // ---- Input: drag back from the puck, release to shoot ----
+  function pos(e) { var r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height }; }
+  cv.addEventListener('pointerdown', function (e) {
+    if (puck.moving || scored) return;
+    var p = pos(e);
+    if (Math.hypot(p.x - puck.x, p.y - puck.y) < 80) { drag = p; cv.setPointerCapture(e.pointerId); cv.classList.add('aim'); e.preventDefault(); }
+  });
+  cv.addEventListener('pointermove', function (e) { if (drag) drag = pos(e); });
+  function release() {
+    if (!drag) return;
+    var dx = puck.x - drag.x, dy = puck.y - drag.y, m = Math.min(1, Math.hypot(dx, dy) / 200);
+    if (m > 0.03) {
+      var a = Math.atan2(dy, dx), sp = 220 + m * 1150;
+      puck.vx = Math.cos(a) * sp; puck.vy = Math.sin(a) * sp; puck.moving = true; shots++; upd(); say('');
+      shotEvent = false;
+    }
+    drag = null; cv.classList.remove('aim');
+  }
+  cv.addEventListener('pointerup', release);
+  cv.addEventListener('pointercancel', function () { drag = null; cv.classList.remove('aim'); });
+  document.getElementById('hockey-reset').addEventListener('click', function () { reset(); say('Puck back on the center dot.'); });
+})();
+</script>

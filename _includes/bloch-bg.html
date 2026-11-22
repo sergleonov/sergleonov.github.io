@@ -1,0 +1,120 @@
+<svg class="bloch-bg" viewBox="0 0 400 400" aria-hidden="true" focusable="false">
+  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></g>
+</svg>
+<script>
+(function () {
+  var svg = document.querySelector('.bloch-bg');
+  if (!svg) return;
+  var g = svg.querySelector('g');
+
+  // ---- Settings -------------------------------------------------------
+  var CYCLES = 5;          // Rabi swings over the full page
+  var DECAY = 2.2;         // how fast the swings shrink (higher = faster)
+  var DETUNING = 0.28;     // tilt of the rotation axis
+  var TURN = 1.4;          // camera rotation over the full page, in radians
+  var TAIL = 0.16;         // tail length, as a fraction of the page
+  var SHOW_KETS = true;
+  var SHOW_MERIDIANS = true;
+  // ---------------------------------------------------------------------
+
+  var CX = 200, CY = 200, R = 150, EL = 0.32, AZ = 0.6;
+  var n = Math.hypot(1, DETUNING), nx = 1 / n, nz = DETUNING / n;
+
+  // Bloch vector for scroll progress q in [0, 1]: detuned Rabi flopping from |0>, damped
+  function state(q) {
+    var w = q * Math.PI * 2 * CYCLES, d = Math.exp(-q * DECAY);
+    var par = [nx * nz, 0, nz * nz];               // part along the rotation axis
+    var perp = [-par[0], 0, 1 - par[2]];           // part that rotates
+    var cr = [0, -nx, 0];                          // axis x |0>
+    var c = Math.cos(w), s = Math.sin(w);
+    return [par[0] + d * (c * perp[0] + s * cr[0]),
+            par[1] + d * (c * perp[1] + s * cr[1]),
+            par[2] + d * (c * perp[2] + s * cr[2])];
+  }
+
+  function proj(v) {
+    var ca = Math.cos(AZ), sa = Math.sin(AZ);
+    var x1 = v[0] * ca - v[1] * sa, y1 = v[0] * sa + v[1] * ca;
+    var up = v[2] * Math.cos(EL) - y1 * Math.sin(EL);
+    var depth = y1 * Math.cos(EL) + v[2] * Math.sin(EL);
+    return [CX + R * x1, CY - R * up, depth];
+  }
+
+  function r1(v) { return Math.round(v * 10) / 10; }
+  function seg(a, b) { return 'M' + r1(a[0]) + ' ' + r1(a[1]) + 'L' + r1(b[0]) + ' ' + r1(b[1]); }
+
+  // Draw a 3D curve: front parts solid, back parts dimmer and dashed
+  function curve(pts, sw, op) {
+    var out = '', run = [], front = null;
+    function flush() {
+      if (run.length < 2) return;
+      var d = run.map(function (p, i) { return (i ? 'L' : 'M') + r1(p[0]) + ' ' + r1(p[1]); }).join('');
+      out += front
+        ? '<path d="' + d + '" stroke-width="' + sw + '" opacity="' + op + '"/>'
+        : '<path d="' + d + '" stroke-width="' + sw + '" opacity="' + r1(op * 45) / 100 + '" stroke-dasharray="3 5"/>';
+    }
+    pts.forEach(function (p) {
+      var f = p[2] >= 0;
+      if (front === null) front = f;
+      if (f !== front) { run.push(p); flush(); run = [p]; front = f; } else run.push(p);
+    });
+    flush();
+    return out;
+  }
+
+  function circle3(fn) {
+    var pts = [];
+    for (var i = 0; i <= 96; i++) pts.push(proj(fn(i / 96 * Math.PI * 2)));
+    return pts;
+  }
+
+  function draw(p) {
+    AZ = 0.6 + p * TURN;
+    var o = '<circle cx="' + CX + '" cy="' + CY + '" r="' + R + '" stroke-width="1.2" opacity="0.55"/>';
+    o += curve(circle3(function (t) { return [Math.cos(t), Math.sin(t), 0]; }), 1.1, 0.5);
+    if (SHOW_MERIDIANS) {
+      o += curve(circle3(function (t) { return [Math.cos(t), 0, Math.sin(t)]; }), 0.9, 0.28);
+      o += curve(circle3(function (t) { return [0, Math.cos(t), Math.sin(t)]; }), 0.9, 0.28);
+    }
+    var zt = proj([0, 0, 1.12]), zb = proj([0, 0, -1.12]);
+    o += '<path d="' + seg(zt, zb) + '" stroke-width="1" stroke-dasharray="3 5" opacity="0.45"/>';
+    if (SHOW_KETS) {
+      o += '<text x="' + r1(zt[0] + 8) + '" y="' + r1(zt[1] + 4) + '" class="bloch-ket">|0⟩</text>';
+      o += '<text x="' + r1(zb[0] + 8) + '" y="' + r1(zb[1] + 4) + '" class="bloch-ket">|1⟩</text>';
+    }
+
+    // Fading, tapering tail; dimmer where it passes behind the sphere
+    var N = 70;
+    for (var k = N; k > 0; k--) {
+      var q0 = Math.max(0, p - TAIL * k / N), q1 = Math.max(0, p - TAIL * (k - 1) / N);
+      if (q0 === q1) continue;
+      var a = proj(state(q0)), b = proj(state(q1)), f = 1 - k / N;
+      var op = (b[2] < 0 ? 0.4 : 1) * f * f;
+      o += '<path d="' + seg(a, b) + '" stroke-width="' + r1(0.6 + 2 * f) + '" opacity="' + r1(op * 100) / 100 + '"/>';
+    }
+
+    var tip = proj(state(p)), behind = tip[2] < 0;
+    o += '<path d="' + seg([CX, CY], tip) + '" stroke-width="1.6" opacity="' + (behind ? 0.5 : 0.9) + '"/>';
+    o += '<circle cx="' + CX + '" cy="' + CY + '" r="2.5" fill="currentColor" stroke="none" opacity="0.8"/>';
+    o += '<circle cx="' + r1(tip[0]) + '" cy="' + r1(tip[1]) + '" r="' + r1(4 + 1.2 * tip[2]) + '" fill="currentColor" stroke="none" opacity="' + (behind ? 0.55 : 1) + '"/>';
+    g.innerHTML = o;
+  }
+
+  function progress() {
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    // Short pages that barely scroll still get some motion
+    return max > 40 ? Math.min(1, Math.max(0, (window.scrollY || 0) / max)) : 0.35;
+  }
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (reduce.matches) { draw(0.35); return; }
+
+  var ticking = false;
+  function update() { ticking = false; draw(progress()); }
+  window.addEventListener('scroll', function () {
+    if (!ticking) { ticking = true; window.requestAnimationFrame(update); }
+  }, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+})();
+</script>

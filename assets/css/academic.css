@@ -18,6 +18,45 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Scroll-driven wave (see _includes/wave-bg.html).
+   The static bg-wave.svg on body stays as a fallback when JavaScript is off. */
+.wave-bg {
+  position: fixed;
+  right: -30px;
+  bottom: -30px;
+  width: min(60vw, 560px);
+  height: auto;
+  aspect-ratio: 520 / 280;
+  color: var(--accent);
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: -1;
+}
+html.wave-live body { background-image: none; }
+
+/* Scroll-driven Bloch sphere (see _includes/bloch-bg.html) */
+.bloch-bg {
+  position: fixed;
+  right: -20px;
+  bottom: -20px;
+  width: min(42vw, 420px);
+  height: auto;
+  aspect-ratio: 1;
+  color: var(--accent);
+  opacity: 0.28;
+  pointer-events: none;
+  z-index: -1;
+}
+.bloch-ket {
+  fill: currentColor;
+  stroke: none;
+  opacity: 0.6;
+  font-family: var(--serif);
+  font-size: 15px;
+}
+/* Only the wave uses the static image fallback */
+body.bg-bloch, body.bg-none { background-image: none; }
+
 html { font-size: 112.5%; }
 
 body {
@@ -202,6 +241,7 @@ img { max-width: 100%; height: auto; }
   .profile { position: static; }
   .photo { width: 6.5rem; }
   .nav { flex-direction: row; gap: 1.25rem; }
+  .bloch-bg { width: 70vw; opacity: 0.16; }
   .nav a { padding: 0.15rem 0; border-left: 0; border-bottom: 2px solid transparent; }
   .nav a[aria-current="page"] { border-bottom-color: var(--accent); }
   .cv-list li { grid-template-columns: 1fr; gap: 0; }
@@ -212,6 +252,7 @@ img { max-width: 100%; height: auto; }
 }
 
 @media print {
+  .wave-bg, .bloch-bg { display: none; }
   .nav, .footer { display: none; }
   .page { display: block; padding: 0; }
 }
